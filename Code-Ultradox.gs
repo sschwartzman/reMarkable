@@ -174,8 +174,10 @@ function processBold(docbody) {
 
 
 /**
- * Search for _some text_ and replace it with its
+ * Search for _some text_ or *some text* and replace it with its
  * underscore-free, italicized version.
+ * Note: Needs to run AFTER processBold
+ * so **bold** gets checked before *italic*.
  */
 function processItalics(docbody) {
   var italics = docbody.findText('_[^_]+?_');
@@ -184,10 +186,20 @@ function processItalics(docbody) {
     var end = italics.getEndOffsetInclusive();
     var text = italics.getElement().asText();
     text.setItalic(start, end, true);
-    text.deleteText(end-1, end-1);
-    text.deleteText(start+1, start+1);
-    numChanged++;
+    text.deleteText(end, end);
+    text.deleteText(start, start);
     processItalics(docbody);
+  } else {
+    var otheritalics = docbody.findText('\\*[^\\*]+?\\*');
+    if (otheritalics) {
+      var start = otheritalics.getStartOffset();
+      var end = otheritalics.getEndOffsetInclusive();
+      var text = otheritalics.getElement().asText();
+      text.setItalic(start, end, true);
+      text.deleteText(end, end);
+      text.deleteText(start, start);
+      processItalics(docbody);
+    }
   }
 }
 
